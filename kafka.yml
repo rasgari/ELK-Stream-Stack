@@ -1,4 +1,4 @@
- kafka1:
+ kafka:
     image: /bitnami/kafka:3
     # deploy:
       # resources:
