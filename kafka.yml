@@ -1,0 +1,43 @@
+ kafka1:
+    image: /bitnami/kafka:3
+    # deploy:
+      # resources:
+        # limits:
+          # memory: 8G
+        # reservations:
+          # memory: 2G
+    # memswap_limit: 8G
+    container_name: kafka1
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper1:2181,zookeeper2:2181,zookeeper3:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka1:9092,EXTERNAL://127.0.0.1:9093
+      - KAFKA_CFG_LOG_ROLL_HOURS=24
+      - KAFKA_CFG_LOG_RETENTION_HOURS=168
+      - KAFKA_CFG_LOG_RETENTION_CHECK_INTERVAL_HOURS=1
+      - KAFKA_INTER_BROKER_LISTENER_NAME=CLIENT
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_HEAP_OPTS=-Xms8g -Xmx8g
+      - KAFKA_JMX_OPTS=-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka1 -Dcom.sun.management.jmxremote.rmi.port=9997
+      - TZ=Asia/Tehran
+    restart: unless-stopped
+    ports:
+      - '9092'
+      - '9093:9093'
+    volumes:
+      - ./app-data/kafka1:/bitnami/kafka
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+    healthcheck:
+      test:
+        ["CMD", "kafka-topics.sh", "--list", "--bootstrap-server", "localhost:9092"]
+      interval: 20s
+      timeout: 200s
+      retries: 10
+    networks:
+      - app-tire
