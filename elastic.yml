@@ -1,0 +1,34 @@
+elastic:
+    image: /elasticsearch:7.14.1
+    # deploy:
+      # resources:
+        # limits:
+          # memory: 8G
+        # reservations:
+          # memory: 4G
+    # memswap_limit: 8G
+    container_name: elastic1
+    environment:
+      - node.name=elastic1
+      - cluster.name=es-docker-cluster
+      - bootstrap.memory_lock=true
+      - node.attr.data=hot
+      - discovery.seed_hosts=elastic2,elastic3
+      - cluster.initial_master_nodes=elastic1,elastic2,elastic3
+      - "ES_JAVA_OPTS=-Xms8G -Xmx8G"
+      - TZ=Asia/Tehran
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      # for persist volume in local dir: sudo chmod 777 -R app-data/elastic
+      - ./app-data/elastic1:/usr/share/elasticsearch/data
+    restart: unless-stopped
+    healthcheck:
+      test: "curl localhost:9200/_cat/health"
+      interval: 20s
+      timeout: 200s
+      retries: 10
+    networks:
+      - app-tire
