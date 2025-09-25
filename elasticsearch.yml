@@ -1,0 +1,22 @@
+# ======================== Elasticsearch Configuration =========================
+
+# نام نود الاستیک (هر اسمی می‌تونه باشه)
+node.name: my-node-1
+
+# مسیر ذخیره داده‌ها
+path.data: C:/ProgramData/Elastic/Elasticsearch/data
+
+# مسیر ذخیره لاگ‌ها
+path.logs: C:/ProgramData/Elastic/Elasticsearch/logs
+
+# برای اجازه دسترسی بیرونی:
+network.host: 0.0.0.0
+
+# پورت پیش‌فرض HTTP
+http.port: 9200
+
+# برای نود تکی (نه کلاستر)، این خط رو فعال کن
+discovery.type: single-node
+
+# تنظیمات bootstrap برای خطای حافظه یا مجوزها در ویندوز
+bootstrap.memory_lock: false
