@@ -1,4 +1,4 @@
- zookeeper1:
+ zookeeper:
     image: /bitnami/zookeeper:3.7
     container_name: zookeeper1
     environment:
