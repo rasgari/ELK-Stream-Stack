@@ -1,0 +1,11 @@
+  kibana:
+    image: /kibana:7.14.1
+    container_name: kibana
+    ports:
+      - 5601:5601
+    restart: unless-stopped
+    environment:
+      ELASTICSEARCH_URL: http://elastic1:9200
+      ELASTICSEARCH_HOSTS: '["http://elastic1:9200","http://elastic2:9200","http://elastic3:9200"]'
+    networks:
+      - app-tire
