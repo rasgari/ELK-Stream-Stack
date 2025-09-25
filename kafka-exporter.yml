@@ -1,0 +1,18 @@
+ kafka-exporter:
+    image: /cloudhut/kminion:master
+    hostname: kafka-exporter
+    container_name: kafka-exporter
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+      - kafka1
+      - kafka2
+      - kafka3
+    ports:
+      - 28080:8080
+    environment:
+      KAFKA_BROKERS: kafka1:9092,kafka2:9092,kafka3:9092
+    restart: unless-stopped 
+    networks:
+      - app-tire
