@@ -1,0 +1,83 @@
+version: "3.8"
+
+services:
+  # ---------- Elasticsearch (single-node POC) ----------
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.3
+    container_name: es-single
+    environment:
+      - node.name=es-node
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"   # برای سرورهای کوچک: 1g/1g, برای بهتر شدن demo افزایش بدید
+      - xpack.security.enabled=false   # در POC خاموش؛ در production باید فعال باشه
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - elknet
+
+  # ---------- Kibana ----------
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.3
+    container_name: kibana
+    depends_on:
+      - elasticsearch
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - XPACK_SECURITY_ENABLED=false
+    ports:
+      - "5601:5601"
+    volumes:
+      - kibana-data:/usr/share/kibana/data
+    networks:
+      - elknet
+
+  # ---------- Zookeeper (for Kafka) ----------
+  zookeeper:
+    image: confluentinc/cp-zookeeper:8.2.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - elknet
+
+  # ---------- Kafka (single broker) ----------
+  kafka:
+    image: confluentinc/cp-kafka:8.2.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"   # host-accessible listener
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - elknet
+
+volumes:
+  es-data:
+  kibana-data:
+  kafka-data:
+
+networks:
+  elknet:
+    driver: bridge
