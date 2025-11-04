@@ -56,3 +56,15 @@ Kafka به‌صورت دوره‌ای بررسی می‌کنه:
 یا اگر کل اندازه‌ی داده‌ها از log.retention.bytes بیشتر بشه ➜ حذف قدیمی‌ترها.
 
 ---
+
+نکته کاربردی:
+
+اگر سرور فضای محدودی دارد یا ترافیک Kafka بالاست، حتماً این ۳ مورد را با هم تنظیم کن:
+```
+environment:
+  KAFKA_CFG_LOG_SEGMENT_BYTES: 1073741824   # هر 1GB یک فایل
+  KAFKA_CFG_LOG_ROLL_HOURS: 24              # هر 24 ساعت فایل جدید
+  KAFKA_CFG_LOG_RETENTION_HOURS: 168        # نگهداری تا 7 روز
+  KAFKA_CFG_LOG_RETENTION_CHECK_INTERVAL_MS: 300000  # هر 5 دقیقه بررسی حذف
+
+```
