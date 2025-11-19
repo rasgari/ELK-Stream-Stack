@@ -1,0 +1,60 @@
+version: '3.9'
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.0
+    container_name: es-ssl
+    environment:
+      - node.name=es-ssl
+      - cluster.name=ssl-cluster
+      - discovery.type=single-node
+      - ELASTIC_PASSWORD=StrongPass123!
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=certs/es.key
+      - xpack.security.http.ssl.certificate=certs/es.crt
+      - xpack.security.http.ssl.certificate_authorities=certs/ca.crt
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - xpack.security.transport.ssl.key=certs/es.key
+      - xpack.security.transport.ssl.certificate=certs/es.crt
+      - xpack.security.transport.ssl.certificate_authorities=certs/ca.crt
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+      - ./certs:/usr/share/elasticsearch/config/certs
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+
+  cert-generator:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.0
+    container_name: cert-generator
+    command: >
+      bash -c "
+        if [ ! -f /certs/ca.crt ]; then
+          echo '⚙️ Generating CA and SSL certificates...'
+          elasticsearch-certutil ca --silent --pem --out /certs/ca.zip &&
+          unzip /certs/ca.zip -d /certs/ &&
+          elasticsearch-certutil cert --silent --pem \
+            --ca-cert /certs/ca/ca.crt \
+            --ca-key /certs/ca/ca.key \
+            --name es \
+            --dns es-ssl \
+            --out /certs/es.zip &&
+          unzip /certs/es.zip -d /certs/
+          mv /certs/es/es.crt /certs/es.crt
+          mv /certs/es/es.key /certs/es.key
+          echo 'SSL READY'
+        fi
+        sleep infinity
+      "
+    volumes:
+      - ./certs:/certs
+
+volumes:
+  es-data:
